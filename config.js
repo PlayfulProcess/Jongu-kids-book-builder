@@ -1,8 +1,10 @@
 const config = {
     getApiEndpoint() {
-        if (window.location.hostname.includes('github.io')) {
-            return 'https://your-aws-elastic-beanstalk-url.elasticbeanstalk.com';  // Replace with your AWS URL
+        // Check if we're on localhost for development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'http://localhost:8000';
         }
-        return 'http://localhost:8000';
+        // For Vercel deployment - use the same domain as the frontend
+        return window.location.origin;
     }
-}; 
+};
