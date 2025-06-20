@@ -150,9 +150,10 @@ async function generateImage(prompt) {
         previewImage.src = data.image_url;
         previewImage.alt = 'Generated illustration';
     } catch (err) {
+        console.error('Image generation error:', err);
         previewImage.alt = 'Image generation failed';
         previewImage.style.display = 'none';
-        alert('Image generation failed.');
+        alert(`Image generation failed: ${err.message}`);
     }
 }
 
@@ -175,7 +176,8 @@ async function sendMessageToBackend(message) {
         // No auto-preview here
     } catch (err) {
         removeThinkingIndicator();
-        addChatMessage('assistant', '[Error: Could not reach assistant]');
+        console.error('Chat error:', err);
+        addChatMessage('assistant', `[Error: Could not reach assistant - ${err.message}]`);
     }
 }
 
