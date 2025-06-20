@@ -129,5 +129,6 @@ async def debug_info():
         "environment": "vercel" if os.getenv("VERCEL") else "local"
     }
 
-# For Vercel deployment - keep this at the end
-handler = app
+# For Vercel deployment
+from mangum import Mangum
+handler = Mangum(app)
