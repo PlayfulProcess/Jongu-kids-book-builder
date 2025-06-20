@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import openai
 from mangum import Mangum
+import logging
 
 # Load environment variables (this is safe to do at module level)
 load_dotenv()
@@ -88,14 +89,20 @@ async def generate_image(req: ImageRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("JonguKidsBookBuilder")
+
 # Add a simple health check and serve the main page
 @app.get("/")
 async def serve_index():
     try:
+        logger.info("Serving index.html")
         with open(os.path.join(module_path, "index.html"), "r", encoding="utf-8") as f:
             content = f.read()
         return HTMLResponse(content=content)
     except FileNotFoundError:
+        logger.error("index.html not found")
         raise HTTPException(status_code=404, detail="index.html not found")
 
 # Serve static files
@@ -134,6 +141,7 @@ async def health_check():
 # Debug endpoint to check environment
 @app.get("/api/debug")
 async def debug_info():
+    logger.info("Debugging environment")
     current_key = os.getenv("OPENAI_API_KEY")
     return {
         "status": "ok",
@@ -143,4 +151,5 @@ async def debug_info():
     }
 
 # Vercel entry point
+logger.info("Initializing Mangum handler")
 handler = Mangum(app)
