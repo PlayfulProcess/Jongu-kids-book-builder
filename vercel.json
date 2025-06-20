@@ -4,36 +4,12 @@
     {
       "src": "main.py",
       "use": "@vercel/python"
-    },
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "app.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "config.js",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/chat",
+      "src": "/(.*)",
       "dest": "main.py"
-    },
-    {
-      "src": "/generate-image",
-      "dest": "main.py"
-    },
-    {
-      "src": "/",
-      "dest": "index.html"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
-      "dest": "/$1"
     }
   ]
 }
