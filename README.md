@@ -69,7 +69,8 @@ A FastAPI-powered web application for creating interactive children's books with
    uvicorn main:app --reload --port 8000
    ```
 
-4. Open `index.html` in a browser
+4. **Important**: Open your browser and go to `http://localhost:8000` 
+   (Do NOT open the index.html file directly - this will cause CORS errors)
 
 ## Troubleshooting
 
