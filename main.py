@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import Response, HTMLResponse, PlainTextResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import openai
@@ -32,19 +32,6 @@ Image Prompt:
 Do not include any other commentary or instructions. Only output these two sections, clearly labeled. The image prompt should be suitable for DALL·E 3 and include overlay text if appropriate.'''
 
 app = FastAPI()
-
-# Add startup event to check configuration
-@app.on_event("startup")
-async def startup_event():
-    try:
-        # Try to get the API key
-        api_key = os.getenv("OPENAI_API_KEY")
-        if api_key:
-            print(f"✅ OpenAI API key configured (length: {len(api_key)})")
-        else:
-            print("⚠️ OpenAI API key not found in environment variables")
-    except Exception as e:
-        print(f"❌ Startup error: {e}")
 
 # Allow CORS for local dev and your domain
 app.add_middleware(
@@ -100,16 +87,31 @@ async def generate_image(req: ImageRequest):
 # Add a simple health check and serve the main page
 @app.get("/")
 async def serve_index():
-    return FileResponse("index.html")
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            content = f.read()
+        return HTMLResponse(content=content)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="index.html not found")
 
 # Serve static files
 @app.get("/app.js")
 async def serve_app_js():
-    return FileResponse("app.js")
+    try:
+        with open("app.js", "r", encoding="utf-8") as f:
+            content = f.read()
+        return Response(content=content, media_type="application/javascript")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="app.js not found")
 
 @app.get("/config.js")
 async def serve_config_js():
-    return FileResponse("config.js")
+    try:
+        with open("config.js", "r", encoding="utf-8") as f:
+            content = f.read()
+        return Response(content=content, media_type="application/javascript")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="config.js not found")
 
 # API endpoint for health check
 @app.get("/api/health")
