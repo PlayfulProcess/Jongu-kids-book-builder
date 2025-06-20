@@ -10,6 +10,9 @@ from mangum import Mangum
 # Load environment variables (this is safe to do at module level)
 load_dotenv()
 
+# This will be the base directory for our project files
+module_path = os.path.dirname(__file__)
+
 # Get the API key but don't fail if it's not available yet
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -89,7 +92,7 @@ async def generate_image(req: ImageRequest):
 @app.get("/")
 async def serve_index():
     try:
-        with open("index.html", "r", encoding="utf-8") as f:
+        with open(os.path.join(module_path, "index.html"), "r", encoding="utf-8") as f:
             content = f.read()
         return HTMLResponse(content=content)
     except FileNotFoundError:
@@ -99,7 +102,7 @@ async def serve_index():
 @app.get("/app.js")
 async def serve_app_js():
     try:
-        with open("app.js", "r", encoding="utf-8") as f:
+        with open(os.path.join(module_path, "app.js"), "r", encoding="utf-8") as f:
             content = f.read()
         return Response(content=content, media_type="application/javascript")
     except FileNotFoundError:
@@ -108,11 +111,20 @@ async def serve_app_js():
 @app.get("/config.js")
 async def serve_config_js():
     try:
-        with open("config.js", "r", encoding="utf-8") as f:
+        with open(os.path.join(module_path, "config.js"), "r", encoding="utf-8") as f:
             content = f.read()
         return Response(content=content, media_type="application/javascript")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="config.js not found")
+
+# Add favicon handlers to prevent log noise
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon_ico():
+    return Response(status_code=204)
+
+@app.get("/favicon.png", include_in_schema=False)
+async def favicon_png():
+    return Response(status_code=204)
 
 # API endpoint for health check
 @app.get("/api/health")
