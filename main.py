@@ -5,6 +5,7 @@ from fastapi.responses import Response, HTMLResponse, PlainTextResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import openai
+from mangum import Mangum
 
 # Load environment variables (this is safe to do at module level)
 load_dotenv()
@@ -129,6 +130,5 @@ async def debug_info():
         "environment": "vercel" if os.getenv("VERCEL") else "local"
     }
 
-# For Vercel deployment
-from mangum import Mangum
+# Vercel entry point
 handler = Mangum(app)
