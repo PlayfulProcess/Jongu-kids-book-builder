@@ -40,15 +40,23 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
-    # Prepend system prompt
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + req.messages
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=messages,
-        max_tokens=512,
-        temperature=0.8,
-    )
-    return {"reply": response.choices[0].message.content}
+    try:
+        # Check if API key is available
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        
+        # Prepend system prompt
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}] + req.messages
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=messages,
+            max_tokens=512,
+            temperature=0.8,
+        )
+        return {"reply": response.choices[0].message.content}
+    except Exception as e:
+        # Return detailed error for debugging
+        raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
 
 class ImageRequest(BaseModel):
     prompt: str
@@ -56,6 +64,10 @@ class ImageRequest(BaseModel):
 @app.post("/generate-image")
 async def generate_image(req: ImageRequest):
     try:
+        # Check if API key is available
+        if not OPENAI_API_KEY:
+            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+            
         response = client.images.generate(
             model="dall-e-3",
             prompt=req.prompt,
@@ -65,7 +77,7 @@ async def generate_image(req: ImageRequest):
         image_url = response.data[0].url
         return {"image_url": image_url}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Image generation error: {str(e)}")
 
 # Add a simple health check and serve the main page
 @app.get("/")
@@ -85,6 +97,15 @@ async def serve_config_js():
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok", "message": "Jongu Kids Book Builder API is running"}
+
+# Debug endpoint to check environment
+@app.get("/api/debug")
+async def debug_info():
+    return {
+        "status": "ok",
+        "openai_key_configured": bool(OPENAI_API_KEY),
+        "openai_key_length": len(OPENAI_API_KEY) if OPENAI_API_KEY else 0
+    }
 
 # For Vercel deployment - keep this at the end
 handler = app
