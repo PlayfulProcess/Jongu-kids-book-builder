@@ -6,13 +6,20 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 import openai
 
+# Load environment variables (this is safe to do at module level)
 load_dotenv()
 
+# Get the API key but don't fail if it's not available yet
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    raise ValueError("OPENAI_API_KEY environment variable is required")
 
-client = openai.OpenAI(api_key=OPENAI_API_KEY)
+# Lazy initialization of OpenAI client
+def get_openai_client():
+    global OPENAI_API_KEY
+    if not OPENAI_API_KEY:
+        OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not OPENAI_API_KEY:
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+    return openai.OpenAI(api_key=OPENAI_API_KEY)
 
 SYSTEM_PROMPT = '''You are a helpful, creative book assistant for families and educators. When asked to generate a story page, always reply in this format:
 
@@ -25,6 +32,19 @@ Image Prompt:
 Do not include any other commentary or instructions. Only output these two sections, clearly labeled. The image prompt should be suitable for DALL·E 3 and include overlay text if appropriate.'''
 
 app = FastAPI()
+
+# Add startup event to check configuration
+@app.on_event("startup")
+async def startup_event():
+    try:
+        # Try to get the API key
+        api_key = os.getenv("OPENAI_API_KEY")
+        if api_key:
+            print(f"✅ OpenAI API key configured (length: {len(api_key)})")
+        else:
+            print("⚠️ OpenAI API key not found in environment variables")
+    except Exception as e:
+        print(f"❌ Startup error: {e}")
 
 # Allow CORS for local dev and your domain
 app.add_middleware(
@@ -41,9 +61,8 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat_endpoint(req: ChatRequest):
     try:
-        # Check if API key is available
-        if not OPENAI_API_KEY:
-            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        # Get OpenAI client (lazy initialization)
+        client = get_openai_client()
         
         # Prepend system prompt
         messages = [{"role": "system", "content": SYSTEM_PROMPT}] + req.messages
@@ -64,9 +83,8 @@ class ImageRequest(BaseModel):
 @app.post("/generate-image")
 async def generate_image(req: ImageRequest):
     try:
-        # Check if API key is available
-        if not OPENAI_API_KEY:
-            raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+        # Get OpenAI client (lazy initialization)
+        client = get_openai_client()
             
         response = client.images.generate(
             model="dall-e-3",
@@ -101,10 +119,12 @@ async def health_check():
 # Debug endpoint to check environment
 @app.get("/api/debug")
 async def debug_info():
+    current_key = os.getenv("OPENAI_API_KEY")
     return {
         "status": "ok",
-        "openai_key_configured": bool(OPENAI_API_KEY),
-        "openai_key_length": len(OPENAI_API_KEY) if OPENAI_API_KEY else 0
+        "openai_key_configured": bool(current_key),
+        "openai_key_length": len(current_key) if current_key else 0,
+        "environment": "vercel" if os.getenv("VERCEL") else "local"
     }
 
 # For Vercel deployment - keep this at the end
