@@ -2,7 +2,7 @@
 
 A FastAPI-powered web application for creating interactive children's books with AI-generated content and images.
 
-Still a prototype and I have been working with Brazilian developers to make a better version. Prototype can be seen and interacted in this free deployment in Render, even though performance is not great: https://jongu-books3.onrender.com/?ref=playfulprocess.com
+Still a prototype and I have been working with Brazilian developers to make a better version. Prototype can be seen and interacted in this free deployment in Render, even though performance is not great: https://jongu-kids-book-builder.onrender.com/
 
 ## Features
 
